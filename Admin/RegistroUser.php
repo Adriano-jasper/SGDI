@@ -12,7 +12,18 @@ $id = $_SESSION['id_Admin'];
 $sql = " SELECT * FROM usuario WHERE Id = '$id'";
 $resultado = mysqli_query($mysqli, $sql);
 $dados = mysqli_fetch_array($resultado);
-mysqli_close($mysqli);
+
+
+// Buscar notificações não lidas para o usuário atual
+$notificacoes_query = mysqli_query($mysqli, "SELECT * FROM notificacoes 
+                                           WHERE Id_usuario = '$id' AND Visualizada = 0
+                                           ORDER BY Data DESC LIMIT 3");
+$notificacoes_count = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT(*) AS total 
+                                                              FROM notificacoes 
+                                                              WHERE Id_usuario = '$id' AND Visualizada = 0"))['total'];
+
+
+include 'ConfigRegistroUser.php';
 
 ?>
 
@@ -37,61 +48,96 @@ mysqli_close($mysqli);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Main CSS-->
     <link rel="stylesheet" type="text/css" href="../css/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Font-icon css-->
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
   </head>
   <body class="app sidebar-mini rtl">
+
+  <script>
+$(document).ready(function() {
+    // Quando o dropdown de notificações é aberto
+    $('.app-nav .dropdown').on('shown.bs.dropdown', function() {
+        // Verificar se é o dropdown de notificações
+        if($(this).find('.fa-bell-o').length) {
+            // Fazer uma requisição AJAX para marcar as notificações como lidas
+            $.ajax({
+                url: 'marcar_notificacoes_lidas.php',
+                method: 'POST',
+                data: {id_usuario: <?php echo $id; ?>},
+                success: function(response) {
+                    // Remover o badge de notificação
+                    $('.notification-badge').remove();
+                }
+            });
+        }
+    });
+});
+</script>
     <!-- Navbar-->
     <header class="app-header"><a class="app-header__logo" href="index.php">PGDI</a>
       <!-- Sidebar toggle button--><a class="app-sidebar__toggle" href="#" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
       <!-- Navbar Right Menu-->
       <ul class="app-nav">
         <!--Notification Menu-->
-        <li class="dropdown"><a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications"><i class="fa fa-bell-o fa-lg"></i></a>
+         <li class="dropdown"><a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
+            <i class="fa fa-bell-o fa-lg"></i>
+            <?php if($notificacoes_count > 0): ?>
+            <span class="notification-badge"><?php echo $notificacoes_count; ?></span>
+            <?php endif; ?>
+          </a>
           <ul class="app-notification dropdown-menu dropdown-menu-right">
-            <li class="app-notification__title">You have 4 new notifications.</li>
+            <li class="app-notification__title">Você tem <?php echo $notificacoes_count; ?> novas notificações</li>
             <div class="app-notification__content">
-              <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-primary"></i><i class="fa fa-envelope fa-stack-1x fa-inverse"></i></span></span>
+              <?php 
+              if(mysqli_num_rows($notificacoes_query) > 0) {
+                  while($notif = mysqli_fetch_assoc($notificacoes_query)): 
+              ?>
+              <li>
+                <a class="app-notification__item" href="Notificacoes.php">
+                  <span class="app-notification__icon"><span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x text-<?php 
+                        switch($notif['Tipo']) {
+                            case 'Documento': echo 'primary'; break;
+                            case 'Aprovacao': echo 'success'; break;
+                            case 'Sistema': echo 'warning'; break;
+                            case 'Requisicao': echo 'info'; break;
+                            default: echo 'secondary';
+                        }
+                    ?>"></i>
+                    <i class="fa fa-<?php 
+                        switch($notif['Tipo']) {
+                            case 'Documento': echo 'file'; break;
+                            case 'Aprovacao': echo 'check'; break;
+                            case 'Sistema': echo 'cog'; break;
+                            case 'Requisicao': echo 'share'; break;
+                            default: echo 'bell';
+                        }
+                    ?> fa-stack-1x fa-inverse"></i>
+                  </span></span>
                   <div>
-                    <p class="app-notification__message">Lisa sent you a mail</p>
-                    <p class="app-notification__meta">2 min ago</p>
-                  </div></a></li>
-              <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-danger"></i><i class="fa fa-hdd-o fa-stack-1x fa-inverse"></i></span></span>
-                  <div>
-                    <p class="app-notification__message">Mail server not working</p>
-                    <p class="app-notification__meta">5 min ago</p>
-                  </div></a></li>
-              <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-success"></i><i class="fa fa-money fa-stack-1x fa-inverse"></i></span></span>
-                  <div>
-                    <p class="app-notification__message">Transaction complete</p>
-                    <p class="app-notification__meta">2 days ago</p>
-                  </div></a></li>
-              <div class="app-notification__content">
-                <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-primary"></i><i class="fa fa-envelope fa-stack-1x fa-inverse"></i></span></span>
-                    <div>
-                      <p class="app-notification__message">Lisa sent you a mail</p>
-                      <p class="app-notification__meta">2 min ago</p>
-                    </div></a></li>
-                <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-danger"></i><i class="fa fa-hdd-o fa-stack-1x fa-inverse"></i></span></span>
-                    <div>
-                      <p class="app-notification__message">Mail server not working</p>
-                      <p class="app-notification__meta">5 min ago</p>
-                    </div></a></li>
-                <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-success"></i><i class="fa fa-money fa-stack-1x fa-inverse"></i></span></span>
-                    <div>
-                      <p class="app-notification__message">Transaction complete</p>
-                      <p class="app-notification__meta">2 days ago</p>
-                    </div></a></li>
-              </div>
+                    <p class="app-notification__message"><?php echo $notif['Descricao']; ?></p>
+                    <p class="app-notification__meta"><?php echo date('d/m/Y H:i', strtotime($notif['Data'])); ?></p>
+                  </div>
+                </a>
+              </li>
+              <?php 
+                  endwhile;
+              } else {
+                  echo '<li><span class="app-notification__message">Nenhuma notificação nova</span></li>';
+              }
+              ?>
             </div>
-            <li class="app-notification__footer"><a href="#">See all notifications.</a></li>
+            <li class="app-notification__footer">
+              <a href="Notificacoes.php">Ver todas as notificações</a>
+            </li>
           </ul>
         </li>
         <!-- User Menu-->
         <li class="dropdown"><a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Open Profile Menu"><i class="fa fa-user fa-lg"></i></a>
           <ul class="dropdown-menu settings-menu dropdown-menu-right">
-            <li><a class="dropdown-item" href="page-user.html"><i class="fa fa-cog fa-lg"></i> Settings</a></li>
-            <li><a class="dropdown-item" href="page-user.html"><i class="fa fa-user fa-lg"></i> Profile</a></li>
+            <li><a class="dropdown-item" href="page-user.php"><i class="fa fa-cog fa-lg"></i> Settings</a></li>
+            <li><a class="dropdown-item" href="page-user.php"><i class="fa fa-user fa-lg"></i> Profile</a></li>
             <li><a class="dropdown-item" href="logout.php"><i class="fa fa-sign-out fa-lg"></i> Logout</a></li>
           </ul>
         </li>
@@ -102,7 +148,7 @@ mysqli_close($mysqli);
     <aside class="app-sidebar">
       <div class="app-sidebar__user">
         <div>
-          <p class="app-sidebar__user-name"><?php echo $dados['Nome']  ?></p>
+          <p class="app-sidebar__user-name"><?php echo $dados['Nome'] ?></p>
           <p class="app-sidebar__user-designation">Admin</p>
         </div>
       </div>
@@ -115,7 +161,7 @@ mysqli_close($mysqli);
            
           </ul>
         </li>
-        <li><a class="app-menu__item" href="#"><i class="app-menu__icon fa fa-sitemap"></i><span class="app-menu__label">Departamentos</span></a></li>
+        
         <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-sitemap"></i><span class="app-menu__label">Departamentos</span><i class="treeview-indicator fa fa-angle-right"></i></a>
           <ul class="treeview-menu">
             <li><a class="treeview-item" href="RegistroDepart.php"><i class="icon fa fa-circle-o"></i> Registrar Departamentos</a></li>
@@ -123,17 +169,17 @@ mysqli_close($mysqli);
            
           </ul>
         </li>
-        <li><a class="app-menu__item" href="form-notifications.html"><i class="app-menu__icon fa fa-bell-o"></i><span class="app-menu__label">Notificações</span></a></li>
+
+        
         <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-files-o"></i><span class="app-menu__label">Documentos</span><i class="treeview-indicator fa fa-angle-right"></i></a>
           <ul class="treeview-menu">
             <li><a class="treeview-item" href="ListarDoc.php"><i class="icon fa fa-circle-o"></i>Listar Documentos</a></li>
           </ul>
         </li>
-        
-        <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-file-text"></i><span class="app-menu__label">Relatórios</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-         
-        </li>
+          
+        <li><a class="app-menu__item" href="Relatorio.php"><i class="app-menu__icon fa fa-bell-o"></i><span class="app-menu__label">Relatórios</span></a></li>        
       </ul>
+
     </aside>
     <main class="app-content">
       <div class="app-title">
@@ -154,9 +200,9 @@ mysqli_close($mysqli);
           <div class="tile">
             <h3 class="tile-title">Registrar Usuário</h3>
             <div class="tile-body">
-              <form action="ConfigRegistroUser.php" method="POST">
+              <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST">
                 <div class="form-group">
-                  <label class="control-label">Name</label>
+                  <label class="control-label">Nome</label>
                   <input class="form-control" type="text" placeholder="Nome completo" name="nome" required>
                 </div>
                 <div class="form-group">
@@ -171,21 +217,15 @@ mysqli_close($mysqli);
                   <label class="control-label">Definir tipo Usuário</label>
                   <select class="form-control" id="chefe" name="chefe">
                     <option value="0">Admin</option>
-                    <option value="2">Chefe de departamento</option>
                     <option value="1">Usuário Normal</option>
                 </select>
                 </div>
                 <div class="form-group">
-                  <label class="control-label">Género</label>
-                  <div class="form-check">
-                    <label class="form-check-label">
-                      <input class="form-check-input" type="radio" name="gender">Masculino
-                    </label>
-                  </div>
-                  <div class="form-check">
-                    <label class="form-check-label">
-                      <input class="form-check-input" type="radio" name="gender">Feminino
-                    </label>
+                <label class="control-label">Selecione o seu gênero</label>
+                  <select class="form-control" id="chefe" name="gender">
+                    <option value="0">Masculino</option>
+                    <option value="1">Feminino</option>
+                </select>
                   </div>
                 </div>
                 <div class="form-group">
@@ -193,7 +233,7 @@ mysqli_close($mysqli);
                   <input class="form-control" type="password" placeholder="Senha" name="senha" required>
                 </div>
                  <div class="tile-footer">
-                    <button class="btn btn-info" type="submit" name="cadastrar" id="demoSwal"><i class="fa fa-fw fa-lg fa-check-circle"></i>Registrar</button>
+                    <button class="btn btn-info" type="submit" name="cadastrar" id="demoSwal" onclick="showCaptcha()"><i class="fa fa-fw fa-lg fa-check-circle"></i>Registrar</button>
                  </div>
               </form>
             </div>
@@ -202,6 +242,22 @@ mysqli_close($mysqli);
         </div>
       </div>
     </main>
+
+    <?php
+        // Mostrar a mensagem de sucesso ou erro usando o SweetAlert
+        if (!empty($mensagem)) {
+          echo '<script>
+              Swal.fire({
+                  icon: "success",
+                  title: "",
+                  text: "'.$mensagem[key($mensagem)].'",
+                  confirmButtonColor:"#3085d6",
+                  confirmButtonText: "Ok"
+              });
+          </script>';
+      }
+        ?>
+
     <!-- Essential javascripts for application to work-->
     <script src="../js/jquery-3.2.1.min.js"></script>
     <script src="../js/popper.min.js"></script>
@@ -223,35 +279,7 @@ mysqli_close($mysqli);
       	ga('send', 'pageview');
       }
     </script>
-
-<script type="text/javascript">
-  $('#demoNotify').click(function(){
-    $.notify({
-      title: "Update Complete : ",
-      message: "Something cool is just updated!",
-      icon: 'fa fa-check' 
-    },{
-      type: "info"
-    });
-  });
-  $('#demoSwal').click(function(){
-    swal({
-      title: "Tens a certeza?",
-      text: "Desejas registrar esse Usuário?",
-      type: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sim, desejo!",
-      cancelButtonText: "Não, não desejo!",
-      closeOnConfirm: false,
-      closeOnCancel: false
-    }, function(isConfirm) {
-      if (isConfirm) {
-        swal("Registrado!", "Usuário Registrado.", "success");
-      } else {
-        swal("Cancelado", "Usuário Cancelado:)", "error");
-      }
-    });
-  });
-</script>
+  </script>
+  
   </body>
 </html>

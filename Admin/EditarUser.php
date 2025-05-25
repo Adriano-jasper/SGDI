@@ -17,6 +17,17 @@ $id = $_SESSION['id_Admin'];
 $sql = " SELECT * FROM usuario WHERE Id = '$id'";
 $resultado = mysqli_query($mysqli, $sql);
 $dados = mysqli_fetch_array($resultado);
+
+
+
+// Buscar notificações não lidas para o usuário atual
+$notificacoes_query = mysqli_query($mysqli, "SELECT * FROM notificacoes 
+                                           WHERE Id_usuario = '$id' AND Visualizada = 0
+                                           ORDER BY Data DESC LIMIT 3");
+$notificacoes_count = mysqli_fetch_assoc(mysqli_query($mysqli, "SELECT COUNT(*) AS total 
+                                                              FROM notificacoes 
+                                                              WHERE Id_usuario = '$id' AND Visualizada = 0"))['total'];
+
 mysqli_close($mysqli);
 
 ?>
@@ -47,56 +58,68 @@ mysqli_close($mysqli);
   </head>
   <body class="app sidebar-mini rtl">
     <!-- Navbar-->
-    <header class="app-header"><a class="app-header__logo" href="index.php">PGDI</a>
+       <header class="app-header"><a class="app-header__logo" href="index.php">PGDI</a>
       <!-- Sidebar toggle button--><a class="app-sidebar__toggle" href="#" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
       <!-- Navbar Right Menu-->
       <ul class="app-nav">
-        <!--Notification Menu-->
-        <li class="dropdown"><a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications"><i class="fa fa-bell-o fa-lg"></i></a>
+       <!--Notification Menu-->
+       <li class="dropdown"><a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Show notifications">
+            <i class="fa fa-bell-o fa-lg"></i>
+            <?php if($notificacoes_count > 0): ?>
+            <span class="notification-badge"><?php echo $notificacoes_count; ?></span>
+            <?php endif; ?>
+          </a>
           <ul class="app-notification dropdown-menu dropdown-menu-right">
-            <li class="app-notification__title">You have 4 new notifications.</li>
+            <li class="app-notification__title">Você tem <?php echo $notificacoes_count; ?> novas notificações</li>
             <div class="app-notification__content">
-              <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-primary"></i><i class="fa fa-envelope fa-stack-1x fa-inverse"></i></span></span>
+              <?php 
+              if(mysqli_num_rows($notificacoes_query) > 0) {
+                  while($notif = mysqli_fetch_assoc($notificacoes_query)): 
+              ?>
+              <li>
+                <a class="app-notification__item" href="Notificacoes.php">
+                  <span class="app-notification__icon"><span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x text-<?php 
+                        switch($notif['Tipo']) {
+                            case 'Documento': echo 'primary'; break;
+                            case 'Aprovacao': echo 'success'; break;
+                            case 'Sistema': echo 'warning'; break;
+                            case 'Requisicao': echo 'info'; break;
+                            default: echo 'secondary';
+                        }
+                    ?>"></i>
+                    <i class="fa fa-<?php 
+                        switch($notif['Tipo']) {
+                            case 'Documento': echo 'file'; break;
+                            case 'Aprovacao': echo 'check'; break;
+                            case 'Sistema': echo 'cog'; break;
+                            case 'Requisicao': echo 'share'; break;
+                            default: echo 'bell';
+                        }
+                    ?> fa-stack-1x fa-inverse"></i>
+                  </span></span>
                   <div>
-                    <p class="app-notification__message">Lisa sent you a mail</p>
-                    <p class="app-notification__meta">2 min ago</p>
-                  </div></a></li>
-              <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-danger"></i><i class="fa fa-hdd-o fa-stack-1x fa-inverse"></i></span></span>
-                  <div>
-                    <p class="app-notification__message">Mail server not working</p>
-                    <p class="app-notification__meta">5 min ago</p>
-                  </div></a></li>
-              <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-success"></i><i class="fa fa-money fa-stack-1x fa-inverse"></i></span></span>
-                  <div>
-                    <p class="app-notification__message">Transaction complete</p>
-                    <p class="app-notification__meta">2 days ago</p>
-                  </div></a></li>
-              <div class="app-notification__content">
-                <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-primary"></i><i class="fa fa-envelope fa-stack-1x fa-inverse"></i></span></span>
-                    <div>
-                      <p class="app-notification__message">Lisa sent you a mail</p>
-                      <p class="app-notification__meta">2 min ago</p>
-                    </div></a></li>
-                <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-danger"></i><i class="fa fa-hdd-o fa-stack-1x fa-inverse"></i></span></span>
-                    <div>
-                      <p class="app-notification__message">Mail server not working</p>
-                      <p class="app-notification__meta">5 min ago</p>
-                    </div></a></li>
-                <li><a class="app-notification__item" href="javascript:;"><span class="app-notification__icon"><span class="fa-stack fa-lg"><i class="fa fa-circle fa-stack-2x text-success"></i><i class="fa fa-money fa-stack-1x fa-inverse"></i></span></span>
-                    <div>
-                      <p class="app-notification__message">Transaction complete</p>
-                      <p class="app-notification__meta">2 days ago</p>
-                    </div></a></li>
-              </div>
+                    <p class="app-notification__message"><?php echo $notif['Descricao']; ?></p>
+                    <p class="app-notification__meta"><?php echo date('d/m/Y H:i', strtotime($notif['Data'])); ?></p>
+                  </div>
+                </a>
+              </li>
+              <?php 
+                  endwhile;
+              } else {
+                  echo '<li><span class="app-notification__message">Nenhuma notificação nova</span></li>';
+              }
+              ?>
             </div>
-            <li class="app-notification__footer"><a href="#">See all notifications.</a></li>
+            <li class="app-notification__footer">
+              <a href="Notificacoes.php">Ver todas as notificações</a>
+            </li>
           </ul>
         </li>
         <!-- User Menu-->
         <li class="dropdown"><a class="app-nav__item" href="#" data-toggle="dropdown" aria-label="Open Profile Menu"><i class="fa fa-user fa-lg"></i></a>
           <ul class="dropdown-menu settings-menu dropdown-menu-right">
-            <li><a class="dropdown-item" href="page-user.html"><i class="fa fa-cog fa-lg"></i> Settings</a></li>
-            <li><a class="dropdown-item" href="page-user.html"><i class="fa fa-user fa-lg"></i> Profile</a></li>
+            <li><a class="dropdown-item" href="EditPerfiluser.php"><i class="fa fa-user fa-lg"></i> Profile</a></li>
             <li><a class="dropdown-item" href="logout.php"><i class="fa fa-sign-out fa-lg"></i> Logout</a></li>
           </ul>
         </li>
@@ -115,28 +138,8 @@ mysqli_close($mysqli);
         <li><a class="app-menu__item active" href="index.php"><i class="app-menu__icon fa fa-bar-chart"></i><span class="app-menu__label">Dashboard</span></a></li>
         <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-users"></i><span class="app-menu__label">Usuários</span><i class="treeview-indicator fa fa-angle-right"></i></a>
           <ul class="treeview-menu">
-            <li><a class="treeview-item" href="RegistroUser.php"><i class="icon fa fa-circle-o"></i> Registrar Usuários</a></li>
-            <li><a class="treeview-item" href="ListarUser.php" target="_blank" rel="noopener"><i class="icon fa fa-circle-o"></i>Listar Usuários</a></li>
-           
+            <li><a class="treeview-item" href="ListarUser.php" target="_blank" rel="noopener"><i class="icon fa fa-circle-o"></i>Listar Usuários</a></li>     
           </ul>
-        </li>
-        <li><a class="app-menu__item" href="#"><i class="app-menu__icon fa fa-sitemap"></i><span class="app-menu__label">Departamentos</span></a></li>
-        <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-sitemap"></i><span class="app-menu__label">Departamentos</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-          <ul class="treeview-menu">
-            <li><a class="treeview-item" href="RegistroDepart.php"><i class="icon fa fa-circle-o"></i> Registrar Departamentos</a></li>
-            <li><a class="treeview-item" href="ListarDeprt.php" target="_blank" rel="noopener"><i class="icon fa fa-circle-o"></i>Listar Departamentos</a></li>
-           
-          </ul>
-        </li>
-        <li><a class="app-menu__item" href="form-notifications.html"><i class="app-menu__icon fa fa-bell-o"></i><span class="app-menu__label">Notificações</span></a></li>
-        <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-files-o"></i><span class="app-menu__label">Documentos</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-          <ul class="treeview-menu">
-            <li><a class="treeview-item" href="ListarDoc.php"><i class="icon fa fa-circle-o"></i>Listar Documentos</a></li>
-          </ul>
-        </li>
-        
-        <li class="treeview"><a class="app-menu__item" href="#" data-toggle="treeview"><i class="app-menu__icon fa fa-file-text"></i><span class="app-menu__label">Relatórios</span><i class="treeview-indicator fa fa-angle-right"></i></a>
-         
         </li>
       </ul>
     </aside>
@@ -178,7 +181,6 @@ mysqli_close($mysqli);
                   <label class="control-label">Definir tipo Usuário</label>
                   <select class="form-control" id="chefe" name="chefe">
                     <option value="0">Admin</option>
-                    <option value="2">Chefe de departamento</option>
                     <option value="1">Usuário Normal</option>
                 </select>
                 </div>

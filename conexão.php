@@ -3,7 +3,7 @@
     $dbHost = 'LocalHost';
     $dbUsername = 'root';
     $bdPassword = '';
-    $dbName = 'sgdi';
+    $dbName = 'pgdi';
  
     $mysqli = new mysqli($dbHost, $dbUsername, $bdPassword, $dbName );
 

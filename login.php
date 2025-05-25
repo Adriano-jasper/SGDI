@@ -1,6 +1,7 @@
-<?php  
+<?php
 
 include "ConfigLogin.php";
+include "ResetSenha.php" ;
 
 ?>
 
@@ -17,7 +18,7 @@ include "ConfigLogin.php";
     <title>Login</title>
   </head>
   <body>
-    <a href="index.html" class="back-button">
+    <a href="index.php" class="back-button">
       &#8592; Voltar
     </a>
     <section class="material-half-bg">
@@ -47,11 +48,11 @@ include "ConfigLogin.php";
             <button name="enviar" class="btn btn-primary btn-block" style="background-color: #00365f; border: #00365f; "><i class="fa fa-sign-in fa-lg fa-fw"></i>SIGN IN</button>
           </div>
         </form>
-        <form class="forget-form" action="#">
+        <form class="forget-form" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="POST">
           <h3 class="login-head" style="color: #00365f;"><i class="fa fa-lg fa-fw fa-lock"></i>Esqueceste a Senha ?</h3>
           <div class="form-group">
             <label class="control-label">EMAIL</label>
-            <input class="form-control" type="text" placeholder="Email">
+            <input class="form-control" type="text" placeholder="Email" name="email">
           </div>
           <div class="form-group btn-container">
             <button class="btn btn-primary btn-block" style="background-color: #00365f; border: #00365f;"><i class="fa fa-unlock fa-lg fa-fw"></i>RESET</button>

@@ -262,7 +262,7 @@
                                 <div class="customer_main">
                                    <div class="customer_right">
                                       <h3 class="customer_name">Departamento de Finanças</h3>
-                                      <p class="default_text">Finanças</p>
+                                     <p class="default_text">Finanças</p>
                                       <p class="enim_text">Cuida da gestão financeira, incluindo controle de receitas, despesas, fluxo de caixa, contas a pagar e a receber, e planejamento orçamentário. O departamento financeiro também lida com contabilidade, auditoria e gestão de investimentos.</p>
                                    </div>
                                 </div>
